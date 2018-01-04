@@ -11,41 +11,23 @@ import android.net.wifi.WifiManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import com.loopj.android.http.*;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+
 import org.json.JSONObject;
+
 import java.util.List;
+
 import cz.msebera.android.httpclient.Header;
 
 
 public class NewAppWidget extends AppWidgetProvider {
 
     static int ids;
-    private static AppWidgetManager appWidgetManager1;
     static SharedPreferences credentials;
     static RemoteViews rv;
     static Boolean opened=false;
-
-    @Override
-    public void onDeleted(Context context, int[] appWidgetIds) {
-        // When the user deletes the widget, delete the preference associated with it.
-        final int N = appWidgetIds.length;
-        for (int i = 0; i < N; i++) {
-            NewAppWidgetConfigureActivity.deleteTitlePref(context, appWidgetIds[i]);
-        }
-    }
-
-    @Override
-    public void onEnabled(Context context) {
-        Log.i("Scenario","onEnabled");
-        // Enter relevant functionality for when the first widget is created
-        ids=0;
-    }
-
-    @Override
-    public void onDisabled(Context context) {
-        // Enter relevant functionality for when the last widget is disabled
-        ids-=1;
-    }
+    private static AppWidgetManager appWidgetManager1;
 
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
@@ -77,6 +59,29 @@ public class NewAppWidget extends AppWidgetProvider {
         actionPerformed.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         return PendingIntent.getBroadcast(context, 0, actionPerformed, 0);
     }
+
+    @Override
+    public void onDeleted(Context context, int[] appWidgetIds) {
+        // When the user deletes the widget, delete the preference associated with it.
+        final int N = appWidgetIds.length;
+        for (int i = 0; i < N; i++) {
+            NewAppWidgetConfigureActivity.deleteTitlePref(context, appWidgetIds[i]);
+        }
+    }
+
+    @Override
+    public void onEnabled(Context context) {
+        Log.i("Scenario", "onEnabled");
+        // Enter relevant functionality for when the first widget is created
+        ids = 0;
+    }
+
+    @Override
+    public void onDisabled(Context context) {
+        // Enter relevant functionality for when the last widget is disabled
+        ids -= 1;
+    }
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         Log.i("lastLog", "onUpdate");
@@ -95,12 +100,7 @@ public class NewAppWidget extends AppWidgetProvider {
         credentials = context.getSharedPreferences("MainStorage", 0);
         rv= new RemoteViews(context.getPackageName(), R.layout.new_app_widget);
 
-        if (intent.getAction().toString().equals("OPEN")){
-            opened=true;
-        }
-        else{
-            opened=false;
-        }
+        opened = intent.getAction().toString().equals("OPEN");
 //      updating the widget's layout drawing
         if (appWidgetManager1!=null)
         {updateAppWidget(context,appWidgetManager1, ids);}
@@ -178,11 +178,8 @@ public class NewAppWidget extends AppWidgetProvider {
                         wifiManager.disconnect();
                         wifiManager.removeNetwork(list.get(count).networkId);
                         list=wifiManager.getConfiguredNetworks();
-                        count=0;
                     }
                 }
-
-
                 for (WifiConfiguration config: wifiManager.getConfiguredNetworks()) {
                     wifiManager.enableNetwork(config.networkId, true);
 
