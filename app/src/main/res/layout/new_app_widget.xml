@@ -1,0 +1,51 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:padding="@dimen/widget_margin" android:background="#ffbdc2cc">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="*** MassTech Controller ***"
+        android:textSize="25dp"
+        android:gravity="center"
+        android:id="@+id/widgetTV"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <LinearLayout
+        android:layout_below="@id/widgetTV"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="4.5">
+
+
+        <Button
+            android:id="@+id/openBtb"
+            android:text="Open"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/closeBtb"
+            android:text="Close"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/settingsBtb"
+            android:text="Settings"
+            android:layout_width="0dp"
+            android:layout_weight="1.5"
+            android:layout_height="wrap_content" />
+        <ImageView
+            android:layout_width="0dp"
+            android:src="@drawable/closedgate"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:id="@+id/gatePreview"/>
+
+
+        </LinearLayout>
+</RelativeLayout>
