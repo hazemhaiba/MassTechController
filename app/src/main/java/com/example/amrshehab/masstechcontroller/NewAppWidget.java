@@ -148,7 +148,7 @@ public class NewAppWidget extends AppWidgetProvider {
             Log.i("lastLog","3");
             if (wifiManager.isWifiEnabled()){
                 WifiConfiguration configuration= new WifiConfiguration();
-                configuration.SSID="\"" + "ESP32ap" + "\"";
+                configuration.SSID="\"" + "Garage01" + "\"";
                 configuration.preSharedKey="\""+ "12345678"  + "\"";
                 configuration.priority = 99999;
                 wifiManager.addNetwork(configuration);
@@ -158,7 +158,7 @@ public class NewAppWidget extends AppWidgetProvider {
                 Log.i("lastLog","4");
                 for (final WifiConfiguration i : list) {
                     Log.i("lastLog",i.SSID);
-                    if (i.SSID != null && i.SSID.equals("\"" + "ESP32ap" + "\"")) {
+                    if (i.SSID != null && i.SSID.equals("\"" + "Garage01" + "\"")) {
                         Log.i("lastLog", "Network Found, #"+i);
                         wifiManager.disconnect();
                         wifiManager.enableNetwork(i.networkId, true);
