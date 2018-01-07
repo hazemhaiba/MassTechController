@@ -16,8 +16,6 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.json.JSONObject;
 
-import java.util.List;
-
 import cz.msebera.android.httpclient.Header;
 
 
@@ -169,9 +167,9 @@ public class NewAppWidget extends AppWidgetProvider {
                     }
                 });
 
-                List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
+//                List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
 
-                for (int count=0;count<list.size();count++) {
+               /* for (int count=0;count<list.size();count++) {
                     Log.    i("lastLog",list.get(count).SSID);
                     if (list.get(count).SSID != null && list.get(count).SSID.equals("\"" + "ESP32ap" + "\"")) {
                         Log.i("lastLog", "Network Found, #"+list.get(count));
@@ -179,7 +177,7 @@ public class NewAppWidget extends AppWidgetProvider {
                         wifiManager.removeNetwork(list.get(count).networkId);
                         list=wifiManager.getConfiguredNetworks();
                     }
-                }
+                }*/
                 for (WifiConfiguration config: wifiManager.getConfiguredNetworks()) {
                     wifiManager.enableNetwork(config.networkId, true);
 
