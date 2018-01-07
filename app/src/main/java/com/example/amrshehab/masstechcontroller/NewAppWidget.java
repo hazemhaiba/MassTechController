@@ -17,7 +17,6 @@ import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -182,8 +181,10 @@ public class NewAppWidget extends AppWidgetProvider {
                                         connectivityManager.bindProcessToNetwork(null);
                                         if (wifiManager.getConnectionInfo().getSSID() != null && wifiManager.getConnectionInfo().getSSID().equals("\"" + "ESP32ap" + "\"")) {
                                             connectivityManager.bindProcessToNetwork(network);
+                                            Log.i("bind_process", "process  binded to network");
+
                                         } else {
-                                            Toast.makeText(context, "process not binded to network", Toast.LENGTH_LONG).show();
+                                            Log.i("bind_process", "process not binded to network");
                                         }
 
                                     } else {
@@ -191,8 +192,10 @@ public class NewAppWidget extends AppWidgetProvider {
                                         ConnectivityManager.setProcessDefaultNetwork(null);
                                         if (wifiManager.getConnectionInfo().getSSID() != null && wifiManager.getConnectionInfo().getSSID().equals("\"" + "ESP32ap" + "\"")) {
                                             ConnectivityManager.setProcessDefaultNetwork(network);
+                                            Log.i("bind_process", "process  binded to network");
+
                                         } else {
-                                            Toast.makeText(context, "process default not binded to network", Toast.LENGTH_LONG).show();
+                                            Log.i("bind_process", "process not binded to network");
 
                                         }
 
@@ -217,12 +220,26 @@ public class NewAppWidget extends AppWidgetProvider {
                                     updateAppWidget(context, appWidgetManager1, ids);
                                     Log.i("lastLog", "Command Communicated Successfully!");
                                 }
+                                wifiManager.disconnect();
+                                wifiManager.removeNetwork(i.networkId);
+
                             }
 
                             @Override
                             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                                 super.onFailure(statusCode, headers, responseString, throwable);
                                 Log.i("lastLog", "Command Communicated Failed");
+                                wifiManager.disconnect();
+                                wifiManager.removeNetwork(i.networkId);
+
+                            }
+
+                            @Override
+                            public void onFinish() {
+                                super.onFinish();
+                                wifiManager.disconnect();
+                                boolean deleted = wifiManager.removeNetwork(i.networkId);
+                                Log.i("onfinish", "onFinish:  " + deleted);
                             }
                         });
                         break;
