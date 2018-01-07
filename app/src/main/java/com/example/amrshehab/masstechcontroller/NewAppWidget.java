@@ -6,15 +6,25 @@ import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
+import android.net.Uri;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
+import android.os.Build;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.json.JSONObject;
+
+import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -26,6 +36,7 @@ public class NewAppWidget extends AppWidgetProvider {
     static RemoteViews rv;
     static Boolean opened=false;
     private static AppWidgetManager appWidgetManager1;
+    NetworkRequest.Builder builder;
 
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
@@ -108,8 +119,9 @@ public class NewAppWidget extends AppWidgetProvider {
 
         super.onReceive(context, intent);
     }
-    public void wifi_action(final Context context, Intent intent){
 
+    public void wifi_action(final Context context, final Intent intent) {
+        final ConnectivityManager connectivityManager = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         //       start sending the HTTP REQUEST
         if (intent.getAction().toString().equals("OPEN") || intent.getAction().toString().equals("CLOSE")){
             Log.i("lastLog","1");
@@ -136,62 +148,65 @@ public class NewAppWidget extends AppWidgetProvider {
             }
             Log.i("lastLog","3");
             if (wifiManager.isWifiEnabled()){
-                for (WifiConfiguration wifiConfiguration: wifiManager.getConfiguredNetworks()) {
-                    wifiManager.disableNetwork(wifiConfiguration.networkId);
-                }
                 WifiConfiguration configuration= new WifiConfiguration();
                 configuration.SSID="\"" + "ESP32ap" + "\"";
                 configuration.preSharedKey="\""+ "12345678"  + "\"";
-                configuration.priority = 100000;
-                int res = wifiManager.addNetwork(configuration);
-                Log.d("WifiPreference", "add Network returned " + res);
-                wifiManager.disconnect();
-                boolean isEnable = wifiManager.enableNetwork(res, true);
-                Log.d("WifiPreference", "enable Network returned " + isEnable);
-                wifiManager.reconnect();
-                client.get(context, "http://192.168.4.1/HOPEN", null, new JsonHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                        super.onSuccess(statusCode, headers, response);
-                        wifiManager.setWifiEnabled(false);
-                        for (int i = 1; i < ids; i++) {
-                            updateAppWidget(context, appWidgetManager1, ids);
-                            Log.i("lastLog", "Command Communicated Successfully!");
-                        }
-                    }
+                configuration.priority = 99999;
+                wifiManager.addNetwork(configuration);
 
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                        super.onFailure(statusCode, headers, responseString, throwable);
-                        Log.i("lastLog", "Command Communicated Failed");
-                    }
-                });
-
-//                List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
-
-               /* for (int count=0;count<list.size();count++) {
-                    Log.    i("lastLog",list.get(count).SSID);
-                    if (list.get(count).SSID != null && list.get(count).SSID.equals("\"" + "ESP32ap" + "\"")) {
-                        Log.i("lastLog", "Network Found, #"+list.get(count));
-                        wifiManager.disconnect();
-                        wifiManager.removeNetwork(list.get(count).networkId);
-                        list=wifiManager.getConfiguredNetworks();
-                    }
-                }*/
-                for (WifiConfiguration config: wifiManager.getConfiguredNetworks()) {
-                    wifiManager.enableNetwork(config.networkId, true);
-
-                }
-                /*List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
+                List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
 
                 Log.i("lastLog","4");
-                for (WifiConfiguration i : list) {
+                for (final WifiConfiguration i : list) {
                     Log.i("lastLog",i.SSID);
                     if (i.SSID != null && i.SSID.equals("\"" + "ESP32ap" + "\"")) {
                         Log.i("lastLog", "Network Found, #"+i);
                         wifiManager.disconnect();
                         wifiManager.enableNetwork(i.networkId, true);
                         wifiManager.reconnect();
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            builder = new NetworkRequest.Builder();
+                            //set the transport type do WIFI
+                            builder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+                            connectivityManager.requestNetwork(builder.build(), new ConnectivityManager.NetworkCallback() {
+                                @Override
+                                public void onAvailable(Network network) {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                        if (Build.VERSION.RELEASE.equalsIgnoreCase("6.0")) {
+                                            if (!Settings.System.canWrite(context)) {
+                                                Intent goToSettings = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                                                goToSettings.setData(Uri.parse("package:" + context.getPackageName()));
+                                                context.startActivity(goToSettings);
+                                            }
+                                        }
+                                        connectivityManager.bindProcessToNetwork(null);
+                                        if (wifiManager.getConnectionInfo().getSSID() != null && wifiManager.getConnectionInfo().getSSID().equals("\"" + "ESP32ap" + "\"")) {
+                                            connectivityManager.bindProcessToNetwork(network);
+                                        } else {
+                                            Toast.makeText(context, "process not binded to network", Toast.LENGTH_LONG).show();
+                                        }
+
+                                    } else {
+                                        //This method was deprecated in API level 23
+                                        ConnectivityManager.setProcessDefaultNetwork(null);
+                                        if (wifiManager.getConnectionInfo().getSSID() != null && wifiManager.getConnectionInfo().getSSID().equals("\"" + "ESP32ap" + "\"")) {
+                                            ConnectivityManager.setProcessDefaultNetwork(network);
+                                        } else {
+                                            Toast.makeText(context, "process default not binded to network", Toast.LENGTH_LONG).show();
+
+                                        }
+
+                                    }
+                                    try {
+                                        //do a callback or something else to alert your code that it's ok to send the message through socket now
+                                    } catch (Exception e) {
+                                        Log.e(null, "onAvailable: ", e);
+                                        e.printStackTrace();
+                                    }
+                                    connectivityManager.unregisterNetworkCallback(this);
+                                }
+                            });
+                        }
                         Log.i("lastLog", "supposed to be connected by now");
                         client.get(context, "http://192.168.4.1/HOPEN", null, new JsonHttpResponseHandler() {
                             @Override
@@ -212,7 +227,7 @@ public class NewAppWidget extends AppWidgetProvider {
                         });
                         break;
                     }
-                }*/
+                }
 
             }
 
