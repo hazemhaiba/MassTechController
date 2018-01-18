@@ -1,5 +1,6 @@
 package com.example.amrshehab.masstechcontroller;
 
+import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -148,7 +149,7 @@ public class NewAppWidget extends AppWidgetProvider {
             Log.i("lastLog","3");
             if (wifiManager.isWifiEnabled()){
                 WifiConfiguration configuration= new WifiConfiguration();
-                configuration.SSID="\"" + "Garage01" + "\"";
+                configuration.SSID = "\"" + "ESP32ap" + "\"";
                 configuration.preSharedKey="\""+ "12345678"  + "\"";
                 configuration.priority = 99999;
                 wifiManager.addNetwork(configuration);
@@ -158,7 +159,7 @@ public class NewAppWidget extends AppWidgetProvider {
                 Log.i("lastLog","4");
                 for (final WifiConfiguration i : list) {
                     Log.i("lastLog",i.SSID);
-                    if (i.SSID != null && i.SSID.equals("\"" + "Garage01" + "\"")) {
+                    if (i.SSID != null && i.SSID.equals("\"" + "ESP32ap" + "\"")) {
                         Log.i("lastLog", "Network Found, #"+i);
                         wifiManager.disconnect();
                         wifiManager.enableNetwork(i.networkId, true);
@@ -168,6 +169,7 @@ public class NewAppWidget extends AppWidgetProvider {
                             //set the transport type do WIFI
                             builder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
                             connectivityManager.requestNetwork(builder.build(), new ConnectivityManager.NetworkCallback() {
+                                @TargetApi(Build.VERSION_CODES.LOLLIPOP)
                                 @Override
                                 public void onAvailable(Network network) {
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
