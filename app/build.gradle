@@ -25,5 +25,4 @@ dependencies {
     compile 'cz.msebera.android:httpclient:4.3.6'
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile files('libs/android-async-http-1.4.9.jar')
-
 }

@@ -19,9 +19,7 @@ import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.JsonHttpResponseHandler;
-
-import org.json.JSONObject;
+import com.loopj.android.http.AsyncHttpResponseHandler;
 
 import java.util.List;
 
@@ -148,7 +146,7 @@ public class NewAppWidget extends AppWidgetProvider {
             Log.i("lastLog","3");
             if (wifiManager.isWifiEnabled()){
                 WifiConfiguration configuration= new WifiConfiguration();
-                configuration.SSID="\"" + "Garage01" + "\"";
+                configuration.SSID = "\"" + "GarageDoor" + "\"";
                 configuration.preSharedKey="\""+ "12345678"  + "\"";
                 configuration.priority = 99999;
                 wifiManager.addNetwork(configuration);
@@ -158,7 +156,7 @@ public class NewAppWidget extends AppWidgetProvider {
                 Log.i("lastLog","4");
                 for (final WifiConfiguration i : list) {
                     Log.i("lastLog",i.SSID);
-                    if (i.SSID != null && i.SSID.equals("\"" + "Garage01" + "\"")) {
+                    if (i.SSID != null && i.SSID.equals("\"" + "GarageDoor" + "\"")) {
                         Log.i("lastLog", "Network Found, #"+i);
                         wifiManager.disconnect();
                         wifiManager.enableNetwork(i.networkId, true);
@@ -179,7 +177,7 @@ public class NewAppWidget extends AppWidgetProvider {
                                             }
                                         }
                                         connectivityManager.bindProcessToNetwork(null);
-                                        if (wifiManager.getConnectionInfo().getSSID() != null && wifiManager.getConnectionInfo().getSSID().equals("\"" + "ESP32ap" + "\"")) {
+                                        if (wifiManager.getConnectionInfo().getSSID() != null && wifiManager.getConnectionInfo().getSSID().equals("\"" + "GarageDoor" + "\"")) {
                                             connectivityManager.bindProcessToNetwork(network);
                                             Log.i("bind_process", "process  binded to network");
 
@@ -190,7 +188,7 @@ public class NewAppWidget extends AppWidgetProvider {
                                     } else {
                                         //This method was deprecated in API level 23
                                         ConnectivityManager.setProcessDefaultNetwork(null);
-                                        if (wifiManager.getConnectionInfo().getSSID() != null && wifiManager.getConnectionInfo().getSSID().equals("\"" + "ESP32ap" + "\"")) {
+                                        if (wifiManager.getConnectionInfo().getSSID() != null && wifiManager.getConnectionInfo().getSSID().equals("\"" + "GarageDoor" + "\"")) {
                                             ConnectivityManager.setProcessDefaultNetwork(network);
                                             Log.i("bind_process", "process  binded to network");
 
@@ -211,11 +209,27 @@ public class NewAppWidget extends AppWidgetProvider {
                             });
                         }
                         Log.i("lastLog", "supposed to be connected by now");
-                        client.get(context, "http://192.168.4.1/HOPEN", null, new JsonHttpResponseHandler() {
+
+                        client.get(context, "http://192.168.4.1/HOPEN", null, new AsyncHttpResponseHandler() {
                             @Override
-                            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                                super.onSuccess(statusCode, headers, response);
+                            public void onStart() {
+                                Log.i("onstart", "onStart: Starting the request");
+                                super.onStart();
+                            }
+
+
+                            @Override
+                            public void onFinish() {
+                                super.onFinish();
+                                wifiManager.disconnect();
+                                boolean deleted = wifiManager.removeNetwork(i.networkId);
+                                Log.i("onfinish", "onFinish:  " + deleted);
+                            }
+
+                            @Override
+                            public void onSuccess(int m, Header[] headers, byte[] bytes) {
                                 wifiManager.setWifiEnabled(false);
+                                Log.i("onsuccess", "onSuccess: in the success method");
                                 for (int i = 1; i < ids; i++) {
                                     updateAppWidget(context, appWidgetManager1, ids);
                                     Log.i("lastLog", "Command Communicated Successfully!");
@@ -226,20 +240,11 @@ public class NewAppWidget extends AppWidgetProvider {
                             }
 
                             @Override
-                            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                                super.onFailure(statusCode, headers, responseString, throwable);
+                            public void onFailure(int m, Header[] headers, byte[] bytes, Throwable throwable) {
                                 Log.i("lastLog", "Command Communicated Failed");
                                 wifiManager.disconnect();
                                 wifiManager.removeNetwork(i.networkId);
 
-                            }
-
-                            @Override
-                            public void onFinish() {
-                                super.onFinish();
-                                wifiManager.disconnect();
-                                boolean deleted = wifiManager.removeNetwork(i.networkId);
-                                Log.i("onfinish", "onFinish:  " + deleted);
                             }
                         });
                         break;
@@ -257,5 +262,3 @@ public class NewAppWidget extends AppWidgetProvider {
         }
     }
 }
-
-
