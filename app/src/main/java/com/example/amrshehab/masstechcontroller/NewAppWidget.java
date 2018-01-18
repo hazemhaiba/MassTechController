@@ -209,8 +209,22 @@ public class NewAppWidget extends AppWidgetProvider {
                             });
                         }
                         Log.i("lastLog", "supposed to be connected by now");
-
-                        client.get(context, "http://192.168.4.1/HOPEN", null, new AsyncHttpResponseHandler() {
+                        String base_URL = "http://192.168.4.1/";
+                        String open = "HOPEN";
+                        String close = "HCLOSE";
+                        String final_URL = null;
+                        switch (intent.getAction().toString()) {
+                            case "OPEN":
+                                final_URL = base_URL + open;
+                                break;
+                            case "CLOSE":
+                                final_URL = base_URL + close;
+                                break;
+                            default:
+                                final_URL = base_URL + "HSTOP";
+                                break;
+                        }
+                        client.get(context, final_URL, null, new AsyncHttpResponseHandler() {
                             @Override
                             public void onStart() {
                                 Log.i("onstart", "onStart: Starting the request");
